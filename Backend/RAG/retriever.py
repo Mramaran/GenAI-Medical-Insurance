@@ -7,7 +7,7 @@ from langchain.tools import tool
 from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
 
-from config import (
+from rag_config import (
     CHROMA_PERSIST_DIR,
     COLLECTION_NAME,
     EMBEDDING_MODEL,

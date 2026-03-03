@@ -12,7 +12,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
 
-from config import (
+from rag_config import (
     POLICIES_DIR,
     CHROMA_PERSIST_DIR,
     COLLECTION_NAME,

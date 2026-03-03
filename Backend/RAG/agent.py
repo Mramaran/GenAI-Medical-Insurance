@@ -12,7 +12,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from config import LLM_MODEL
+from rag_config import LLM_MODEL
 from retriever import retrieve_policy_info
 
 # --- System Prompt ---

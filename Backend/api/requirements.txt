@@ -1,0 +1,23 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+web3
+
+# OCR dependencies
+pytesseract
+pdf2image
+PyMuPDF
+Pillow
+spacy
+
+# RAG dependencies
+langchain
+langchain-ollama
+langchain-chroma
+langchain-text-splitters
+langgraph
+chromadb
+
+# Common
+pydantic

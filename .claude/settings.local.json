@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npx vite build)",
+      "Bash(python -m spacy validate)",
+      "Bash(where python)",
+      "Bash(pip show spacy)",
+      "Bash(pip install spacy)",
+      "Bash(python -m spacy download en_core_web_sm)",
+      "Bash(npm install react-router-dom)",
+      "Bash(python -c \":*)",
+      "Bash(pip install web3 --quiet)",
+      "Bash(tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE)",
+      "Bash(findstr uvicorn)"
+    ]
+  }
+}
