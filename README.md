@@ -124,15 +124,6 @@ Refer to http://localhost:8000/docs for detailed API documentation.
 - **Blockchain**: Solidity, Ethereum Sepolia
 - **AI**: Ollama (Mistral), Google Gemini (optional)
 
-## Contributing
-
-This project is developed for TN-IMPACT 2026 Hackathon. Contributions are welcome via pull requests.
-
-## License
-
-[Specify license if applicable]
-
 ## Acknowledgments
 
 - Open-source communities behind Tesseract, spaCy, LangChain, ChromaDB, Solidity, and React.
-- TN-IMPACT 2026 organizers for the platform.
