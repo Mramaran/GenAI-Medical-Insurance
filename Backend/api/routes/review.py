@@ -50,13 +50,30 @@ async def review_claim(claim_id: str, body: ReviewRequest):
             detail=f"A reason is required when action is '{action}'",
         )
 
+    # Validate state transitions
+    current_status = record.get("status", "submitted")
+    _VALID_TRANSITIONS = {
+        "submitted": {"approve", "reject", "query", "under_review"},
+        "under_review": {"approve", "reject", "query"},
+        "query_raised": {"approve", "reject", "under_review"},
+        "approved": {"settle"},
+        "rejected": set(),
+        "settled": set(),
+    }
+    allowed = _VALID_TRANSITIONS.get(current_status, set())
+    if action not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot '{action}' a claim with status '{current_status}'. Allowed actions: {', '.join(allowed) or 'none'}",
+        )
+
     status_int = _ACTION_MAP[action]
     reason_hash = hash_string(body.reason) if body.reason else hash_string("")
 
     # Write to blockchain
     chain_result = update_claim_status(claim_id, status_int, reason_hash)
 
-    # Update in-memory store
+    # Map action to display status
     new_status = action if action != "under_review" else "under_review"
     if action == "approve":
         new_status = "approved"
@@ -67,16 +84,24 @@ async def review_claim(claim_id: str, body: ReviewRequest):
     elif action == "settle":
         new_status = "settled"
 
-    update_claim(claim_id, {
-        "status": new_status,
-        "review_reason": body.reason,
-        "review_reason_hash": reason_hash,
-        "review_tx_hash": chain_result.get("tx_hash"),
-    })
+    # Only update in-memory status if blockchain write succeeded (or blockchain not configured)
+    if not chain_result.get("error"):
+        update_claim(claim_id, {
+            "status": new_status,
+            "review_reason": body.reason,
+            "review_reason_hash": reason_hash,
+            "review_tx_hash": chain_result.get("tx_hash"),
+        })
+    else:
+        # Blockchain failed — store the attempt but don't change status
+        update_claim(claim_id, {
+            "review_reason": body.reason,
+            "review_blockchain_error": chain_result.get("error"),
+        })
 
     return {
         "claim_id": claim_id,
-        "new_status": new_status,
+        "new_status": new_status if not chain_result.get("error") else current_status,
         "reason_hash": reason_hash,
         "tx_hash": chain_result.get("tx_hash"),
         "block_number": chain_result.get("block_number"),

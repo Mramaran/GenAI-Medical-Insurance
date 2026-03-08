@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaimChain — Report Diagrams</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; color: #1a1a2e; }
+  .page { width: 960px; margin: 40px auto; background: #fff; border-radius: 12px; padding: 48px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); page-break-after: always; }
+  .page-title { text-align: center; font-size: 13px; color: #888; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+  h2 { text-align: center; font-size: 22px; margin-bottom: 32px; color: #1a1a2e; }
+
+  /* ========== FIGURE 1: System Architecture ========== */
+  .arch { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+  .arch-layer { border: 2px solid #ddd; border-radius: 12px; padding: 20px; width: 100%; position: relative; }
+  .arch-layer-label { position: absolute; top: -12px; left: 20px; background: #fff; padding: 0 8px; font-size: 11px; font-weight: 700; color: #888; letter-spacing: 1px; text-transform: uppercase; }
+  .arch-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .arch-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border-radius: 10px; padding: 16px 20px; min-width: 180px; text-align: center; }
+  .arch-box h4 { font-size: 14px; margin-bottom: 6px; }
+  .arch-box ul { list-style: none; font-size: 12px; opacity: 0.9; }
+  .arch-box.green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+  .arch-box.orange { background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%); color: #333; }
+  .arch-box.blue { background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); }
+  .arch-box.red { background: linear-gradient(135deg, #e44d26 0%, #f16529 100%); }
+  .arch-box.dark { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); }
+  .arch-arrow { font-size: 28px; color: #999; text-align: center; }
+  .arch-tech { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .arch-tech span { background: #f0f0f0; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; color: #555; }
+
+  /* ========== FIGURE 2: Workflow ========== */
+  .workflow { display: flex; flex-direction: column; gap: 0; align-items: center; }
+  .wf-step { display: flex; align-items: center; gap: 16px; width: 100%; }
+  .wf-num { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #fff; flex-shrink: 0; }
+  .wf-card { flex: 1; border: 2px solid #e8e8e8; border-radius: 10px; padding: 14px 18px; background: #fafbfc; }
+  .wf-card h4 { font-size: 14px; margin-bottom: 4px; }
+  .wf-card p { font-size: 12px; color: #666; line-height: 1.5; }
+  .wf-connector { width: 44px; display: flex; justify-content: center; padding: 4px 0; }
+  .wf-connector .line { width: 3px; height: 24px; background: #ccc; border-radius: 2px; }
+  .wf-icon { font-size: 20px; margin-right: 4px; }
+
+  /* ========== FIGURE 3: LangGraph RAG ========== */
+  .rag { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .rag-node { border: 2px solid #667eea; border-radius: 12px; padding: 16px 24px; min-width: 300px; text-align: center; background: #fff; position: relative; z-index: 1; }
+  .rag-node h4 { font-size: 14px; color: #667eea; margin-bottom: 4px; }
+  .rag-node p { font-size: 12px; color: #666; }
+  .rag-node.decision { border-color: #f2994a; border-radius: 12px; transform: rotate(0deg); background: #fffbf5; }
+  .rag-node.decision h4 { color: #e67e22; }
+  .rag-node.start { border-color: #11998e; background: #f0fdf9; }
+  .rag-node.start h4 { color: #11998e; }
+  .rag-node.end { border-color: #e44d26; background: #fef5f3; }
+  .rag-node.end h4 { color: #e44d26; }
+  .rag-arrow { font-size: 22px; color: #999; padding: 4px 0; }
+  .rag-arrow-label { font-size: 11px; color: #888; font-style: italic; }
+  .rag-branch { display: flex; gap: 40px; align-items: flex-start; justify-content: center; width: 100%; }
+  .rag-branch-item { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .rag-branch-connector { display: flex; align-items: center; justify-content: center; gap: 0; }
+  .rag-hline { height: 2px; background: #ccc; width: 60px; }
+  .rag-vline { width: 2px; height: 30px; background: #ccc; margin: 0 auto; }
+  .rag-loop { border: 2px dashed #f2994a; border-radius: 8px; padding: 8px 16px; font-size: 11px; color: #e67e22; font-weight: 600; margin-top: 4px; }
+
+  /* ========== FIGURES 4-6: UI Mockups ========== */
+  .mockup { border: 2px solid #1e1e3a; border-radius: 12px; overflow: hidden; background: #0a0f1e; color: #e0e0e0; }
+  .mock-topbar { background: #12152a; padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #1e2440; }
+  .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mock-dot.r { background: #ff5f57; }
+  .mock-dot.y { background: #ffbd2e; }
+  .mock-dot.g { background: #28ca41; }
+  .mock-url { flex: 1; background: #1e2440; border-radius: 6px; padding: 5px 12px; font-size: 11px; color: #8892b0; margin-left: 8px; }
+  .mock-body { display: flex; min-height: 420px; }
+  .mock-sidebar { width: 200px; background: #0d1224; padding: 20px 16px; border-right: 1px solid #1e2440; }
+  .mock-sidebar h3 { color: #64ffda; font-size: 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+  .mock-sidebar ul { list-style: none; }
+  .mock-sidebar li { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 4px; cursor: pointer; color: #8892b0; }
+  .mock-sidebar li.active { background: #1e2440; color: #64ffda; }
+  .mock-content { flex: 1; padding: 24px; }
+  .mock-content h2 { font-size: 20px; margin-bottom: 20px; color: #e6f1ff; }
+
+  /* Upload mockup */
+  .upload-zone { border: 2px dashed #2d3561; border-radius: 12px; padding: 40px; text-align: center; margin-bottom: 20px; background: #0d1224; }
+  .upload-zone .icon { font-size: 40px; margin-bottom: 8px; }
+  .upload-zone p { color: #8892b0; font-size: 13px; }
+  .upload-zone .browse { color: #64ffda; text-decoration: underline; cursor: pointer; }
+  .mock-input { display: flex; gap: 12px; margin-bottom: 20px; }
+  .mock-input input { flex: 1; background: #1e2440; border: 1px solid #2d3561; border-radius: 8px; padding: 10px 14px; color: #e0e0e0; font-size: 13px; }
+  .mock-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .mock-btn.green { background: linear-gradient(135deg, #11998e, #38ef7d); color: #fff; }
+  .mock-btn.red { background: linear-gradient(135deg, #e44d26, #f16529); color: #fff; }
+  .mock-progress { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 16px; }
+  .mock-progress .step { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .mock-progress .step .dot { width: 28px; height: 28px; border-radius: 50%; background: #1e2440; border: 2px solid #2d3561; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .mock-progress .step .dot.done { background: #11998e; border-color: #11998e; }
+  .mock-progress .step .dot.active { border-color: #667eea; background: #667eea; }
+  .mock-progress .step span { font-size: 10px; color: #8892b0; }
+  .mock-progress .pline { width: 24px; height: 2px; background: #2d3561; margin-bottom: 16px; }
+  .mock-progress .pline.done { background: #11998e; }
+
+  /* Verdict mockup */
+  .verdict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .v-card { background: #0d1224; border: 1px solid #1e2440; border-radius: 10px; padding: 16px; }
+  .v-card h4 { font-size: 13px; color: #64ffda; margin-bottom: 10px; }
+  .v-card table { width: 100%; font-size: 12px; }
+  .v-card table td { padding: 4px 0; border-bottom: 1px solid #1a1f35; }
+  .v-card table td:first-child { color: #8892b0; width: 45%; }
+  .v-card table td:last-child { color: #e6f1ff; }
+  .v-verdict { grid-column: 1 / -1; background: #0d1224; border: 1px solid #1e2440; border-radius: 10px; padding: 16px; }
+  .v-verdict h4 { font-size: 13px; color: #64ffda; margin-bottom: 10px; }
+  .v-verdict p { font-size: 12px; line-height: 1.7; color: #c0c8e0; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .badge.high { background: rgba(17,153,142,0.2); color: #38ef7d; }
+  .badge.med { background: rgba(242,153,74,0.2); color: #f2994a; }
+  .badge.low { background: rgba(228,77,38,0.2); color: #f16529; }
+  .v-blockchain { background: #0d1224; border: 1px solid #1e2440; border-radius: 10px; padding: 16px; grid-column: 1 / -1; }
+  .v-blockchain h4 { color: #64ffda; font-size: 13px; margin-bottom: 8px; }
+  .v-blockchain .hash { font-family: monospace; font-size: 11px; color: #667eea; word-break: break-all; }
+
+  /* Insurer mockup */
+  .insurer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .insurer-header .status { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; background: rgba(242,153,74,0.2); color: #f2994a; }
+  .fraud-bar { background: #0d1224; border: 1px solid #1e2440; border-radius: 10px; padding: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; }
+  .fraud-bar .label { font-size: 13px; color: #8892b0; white-space: nowrap; }
+  .fraud-bar .bar-track { flex: 1; height: 10px; background: #1e2440; border-radius: 5px; overflow: hidden; }
+  .fraud-bar .bar-fill { height: 100%; border-radius: 5px; }
+  .fraud-bar .bar-fill.low { background: linear-gradient(90deg, #11998e, #38ef7d); width: 22%; }
+  .fraud-bar .score { font-size: 14px; font-weight: 700; color: #38ef7d; }
+  .insurer-actions { display: flex; gap: 12px; margin-top: 16px; justify-content: flex-end; }
+  .timeline { margin-top: 16px; }
+  .timeline-item { display: flex; gap: 12px; margin-bottom: 12px; }
+  .timeline-dot-col { display: flex; flex-direction: column; align-items: center; }
+  .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: #667eea; flex-shrink: 0; }
+  .timeline-line { width: 2px; flex: 1; background: #1e2440; min-height: 20px; }
+  .timeline-content { font-size: 12px; }
+  .timeline-content .time { color: #8892b0; font-size: 10px; }
+  .timeline-content .event { color: #e6f1ff; }
+
+  .print-hint { text-align: center; color: #aaa; font-size: 12px; margin: 40px 0 20px; }
+</style>
+</head>
+<body>
+
+<p class="print-hint">Open in browser &rarr; Screenshot each diagram for your report</p>
+
+<!-- ==================== FIGURE 1: System Architecture ==================== -->
+<div class="page">
+  <p class="page-title">Figure 1</p>
+  <h2>System Architecture Diagram</h2>
+  <div class="arch">
+
+    <!-- Frontend Layer -->
+    <div class="arch-layer">
+      <span class="arch-layer-label">PRESENTATION LAYER</span>
+      <div class="arch-row">
+        <div class="arch-box blue">
+          <h4>Customer Portal</h4>
+          <ul>
+            <li>Upload Documents</li>
+            <li>View AI Verdict</li>
+            <li>Track Claim Status</li>
+            <li>Blockchain Timeline</li>
+          </ul>
+        </div>
+        <div class="arch-box blue">
+          <h4>Insurer Portal</h4>
+          <ul>
+            <li>Review Claims</li>
+            <li>AI Summary View</li>
+            <li>Fraud Risk Score</li>
+            <li>Approve / Reject</li>
+          </ul>
+        </div>
+      </div>
+      <div class="arch-tech">
+        <span>React 18</span><span>Vite 5</span><span>React Router</span><span>Axios</span>
+      </div>
+    </div>
+
+    <div class="arch-arrow">&darr; REST API (JSON) &darr;</div>
+
+    <!-- Backend Layer -->
+    <div class="arch-layer">
+      <span class="arch-layer-label">ORCHESTRATION LAYER &mdash; FastAPI</span>
+      <div class="arch-row">
+        <div class="arch-box green">
+          <h4>OCR Engine</h4>
+          <ul>
+            <li>Tesseract OCR</li>
+            <li>PyMuPDF (fitz)</li>
+            <li>spaCy NER</li>
+            <li>Confidence Scoring</li>
+          </ul>
+        </div>
+        <div class="arch-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <h4>Agentic RAG</h4>
+          <ul>
+            <li>LangGraph Workflow</li>
+            <li>ChromaDB Vector DB</li>
+            <li>Gemini / Mistral LLM</li>
+            <li>Self-Correcting Agent</li>
+          </ul>
+        </div>
+        <div class="arch-box orange">
+          <h4>Blockchain Service</h4>
+          <ul>
+            <li>Web3.py</li>
+            <li>SHA-256 Hashing</li>
+            <li>Merkle Root Builder</li>
+            <li>Contract Interaction</li>
+          </ul>
+        </div>
+      </div>
+      <div class="arch-tech">
+        <span>FastAPI</span><span>Uvicorn</span><span>Python 3.13</span><span>Pydantic</span>
+      </div>
+    </div>
+
+    <div class="arch-arrow">&darr; SHA-256 Merkle Root &darr;</div>
+
+    <!-- Blockchain Layer -->
+    <div class="arch-layer" style="border-color: #e44d26;">
+      <span class="arch-layer-label" style="color: #e44d26;">BLOCKCHAIN LAYER</span>
+      <div class="arch-row">
+        <div class="arch-box dark" style="min-width: 500px;">
+          <h4>Ethereum Sepolia &mdash; ClaimChain.sol</h4>
+          <ul>
+            <li>submitClaimMeta(claimId, merkleRoot) &rarr; Immutable Proof</li>
+            <li>updateStatus(claimId, status, reasonHash) &rarr; Status Tracking</li>
+            <li>getStatusHistory(claimId) &rarr; Full Audit Timeline</li>
+            <li>Events: ClaimSubmitted, StatusUpdated &rarr; Frontend Polling</li>
+          </ul>
+        </div>
+      </div>
+      <div class="arch-tech">
+        <span>Solidity 0.8.19</span><span>Ethereum Sepolia</span><span>Etherscan Verified</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FIGURE 2: End-to-End Workflow ==================== -->
+<div class="page">
+  <p class="page-title">Figure 2</p>
+  <h2>End-to-End Claim Workflow</h2>
+  <div class="workflow">
+
+    <div class="wf-step">
+      <div class="wf-num" style="background: #667eea;">1</div>
+      <div class="wf-card">
+        <h4><span class="wf-icon">📄</span> Document Upload</h4>
+        <p>Patient / hospital staff uploads discharge summary + hospital bill via Customer Portal. Enters policy number for coverage lookup.</p>
+      </div>
+    </div>
+    <div class="wf-step"><div class="wf-connector"><div class="line"></div></div></div>
+
+    <div class="wf-step">
+      <div class="wf-num" style="background: #11998e;">2</div>
+      <div class="wf-card">
+        <h4><span class="wf-icon">🔍</span> OCR + NLP Extraction</h4>
+        <p>Tesseract OCR extracts text from scanned documents. spaCy NLP identifies patient name, diagnosis, procedures, billing amounts, and dates. Confidence score calculated (e.g., 92%).</p>
+      </div>
+    </div>
+    <div class="wf-step"><div class="wf-connector"><div class="line"></div></div></div>
+
+    <div class="wf-step">
+      <div class="wf-num" style="background: #764ba2;">3</div>
+      <div class="wf-card">
+        <h4><span class="wf-icon">🤖</span> Agentic RAG — Policy Coverage Check</h4>
+        <p>LangGraph agent retrieves relevant policy clauses from ChromaDB, grades document relevance, rewrites queries if needed, and generates a natural-language coverage verdict with co-pay, exclusion, and waiting period analysis.</p>
+      </div>
+    </div>
+    <div class="wf-step"><div class="wf-connector"><div class="line"></div></div></div>
+
+    <div class="wf-step">
+      <div class="wf-num" style="background: #f2994a;">4</div>
+      <div class="wf-card">
+        <h4><span class="wf-icon">🔗</span> Merkle Root Hashing + Blockchain Submission</h4>
+        <p>SHA-256 hashes computed for each document and the AI verdict. Combined into a Merkle root. Submitted to ClaimChain smart contract on Ethereum Sepolia. Transaction hash returned.</p>
+      </div>
+    </div>
+    <div class="wf-step"><div class="wf-connector"><div class="line"></div></div></div>
+
+    <div class="wf-step">
+      <div class="wf-num" style="background: #2193b0;">5</div>
+      <div class="wf-card">
+        <h4><span class="wf-icon">👤</span> Patient Views Result</h4>
+        <p>Customer Portal displays: extracted data with confidence indicators, AI coverage verdict, blockchain proof (Merkle root + Etherscan link), and live on-chain claim timeline.</p>
+      </div>
+    </div>
+    <div class="wf-step"><div class="wf-connector"><div class="line"></div></div></div>
+
+    <div class="wf-step">
+      <div class="wf-num" style="background: #e44d26;">6</div>
+      <div class="wf-card">
+        <h4><span class="wf-icon">🏢</span> Insurer Reviews & Decides</h4>
+        <p>Insurer Portal shows AI-summarized claim with fraud risk score. Claims officer reviews and clicks Approve or Reject. Decision recorded on-chain with reason hash.</p>
+      </div>
+    </div>
+    <div class="wf-step"><div class="wf-connector"><div class="line"></div></div></div>
+
+    <div class="wf-step">
+      <div class="wf-num" style="background: #38ef7d; color: #333;">7</div>
+      <div class="wf-card">
+        <h4><span class="wf-icon">✅</span> Transparent Tracking</h4>
+        <p>Patient sees real-time on-chain timeline with every status change (Submitted &rarr; Under Review &rarr; Approved), timestamp, and actor. Fully verifiable on Etherscan by anyone.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== FIGURE 3: LangGraph Agentic RAG ==================== -->
+<div class="page">
+  <p class="page-title">Figure 3</p>
+  <h2>LangGraph Agentic RAG Pipeline</h2>
+  <div class="rag">
+
+    <div class="rag-node start">
+      <h4>START</h4>
+      <p>Claim query from extracted OCR data</p>
+    </div>
+    <div class="rag-arrow">&darr;</div>
+
+    <div class="rag-node decision">
+      <h4>Node 1: generate_or_retrieve</h4>
+      <p>LLM decides: retrieve from policy DB or answer directly?</p>
+    </div>
+
+    <div style="display: flex; width: 100%; justify-content: center; gap: 0; margin: 8px 0;">
+      <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+        <div class="rag-arrow-label">Needs retrieval</div>
+        <div class="rag-arrow">&darr;</div>
+        <div class="rag-node">
+          <h4>Node 2: retrieve</h4>
+          <p>ChromaDB MMR search (k=4)<br>nomic-embed-text embeddings</p>
+        </div>
+        <div class="rag-arrow">&darr;</div>
+        <div class="rag-node decision">
+          <h4>Node 3: grade_documents</h4>
+          <p>LLM evaluates: are retrieved<br>policy clauses relevant?</p>
+        </div>
+        <div style="display: flex; width: 100%; justify-content: center; gap: 60px; margin: 8px 0;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="rag-arrow-label">Relevant &#10003;</div>
+            <div class="rag-arrow">&darr;</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="rag-arrow-label">Not relevant &#10007;</div>
+            <div class="rag-arrow">&darr;</div>
+            <div class="rag-node" style="border-color: #f2994a;">
+              <h4>Node 4: rewrite_question</h4>
+              <p>LLM reformulates query<br>for better retrieval</p>
+            </div>
+            <div class="rag-loop">&uarr; Loop back to Node 2 (max 3x)</div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; width: 200px;">
+        <div class="rag-arrow-label">Can answer directly</div>
+        <div class="rag-arrow" style="font-size: 60px; line-height: 1;">&#8628;</div>
+      </div>
+    </div>
+
+    <div class="rag-node" style="border-color: #11998e;">
+      <h4>Node 5: generate_answer</h4>
+      <p>LLM synthesizes final coverage verdict from relevant policy clauses</p>
+    </div>
+    <div class="rag-arrow">&darr;</div>
+
+    <div class="rag-node end">
+      <h4>OUTPUT</h4>
+      <p>Natural-language verdict: coverage %, co-pay, exclusions, waiting periods, missing docs</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== FIGURE 4: Customer Portal — Upload Page ==================== -->
+<div class="page">
+  <p class="page-title">Figure 4</p>
+  <h2>Customer Portal — Upload Page</h2>
+  <div class="mockup">
+    <div class="mock-topbar">
+      <div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div>
+      <div class="mock-url">localhost:5173/upload</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-sidebar">
+        <h3>&#9878; ClaimChain</h3>
+        <ul>
+          <li>Dashboard</li>
+          <li class="active">&#8593; Upload Claim</li>
+          <li>My Claims</li>
+          <li>Settings</li>
+        </ul>
+      </div>
+      <div class="mock-content">
+        <h2>Submit New Claim</h2>
+        <div class="upload-zone">
+          <div class="icon">&#128451;</div>
+          <p>Drag & drop your medical documents here</p>
+          <p style="margin-top: 4px;">Discharge Summary, Hospital Bill, Prescription</p>
+          <p style="margin-top: 8px;"><span class="browse">Browse Files</span> &middot; PDF, JPG, PNG supported</p>
+        </div>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+          <div style="background: #1e2440; border-radius: 8px; padding: 8px 14px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+            <span style="color: #64ffda;">&#128196;</span> discharge_summary.pdf <span style="color: #38ef7d;">&#10003;</span>
+          </div>
+          <div style="background: #1e2440; border-radius: 8px; padding: 8px 14px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+            <span style="color: #64ffda;">&#128196;</span> hospital_bill.pdf <span style="color: #38ef7d;">&#10003;</span>
+          </div>
+        </div>
+        <div class="mock-input">
+          <input type="text" value="HSP-2025-TN-001" placeholder="Enter Policy Number">
+          <button class="mock-btn">Analyze Claim</button>
+        </div>
+        <div class="mock-progress">
+          <div class="step"><div class="dot done">&#10003;</div><span>Upload</span></div>
+          <div class="pline done"></div>
+          <div class="step"><div class="dot done">&#10003;</div><span>OCR</span></div>
+          <div class="pline done"></div>
+          <div class="step"><div class="dot active">3</div><span>RAG</span></div>
+          <div class="pline"></div>
+          <div class="step"><div class="dot">4</div><span>Hash</span></div>
+          <div class="pline"></div>
+          <div class="step"><div class="dot">5</div><span>Chain</span></div>
+          <div class="pline"></div>
+          <div class="step"><div class="dot">6</div><span>Done</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FIGURE 5: Customer Portal — Verdict Page ==================== -->
+<div class="page">
+  <p class="page-title">Figure 5</p>
+  <h2>Customer Portal — Verdict Page</h2>
+  <div class="mockup">
+    <div class="mock-topbar">
+      <div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div>
+      <div class="mock-url">localhost:5173/claims/CLM-20260304-A1B2</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-sidebar">
+        <h3>&#9878; ClaimChain</h3>
+        <ul>
+          <li>Dashboard</li>
+          <li>&#8593; Upload Claim</li>
+          <li class="active">My Claims</li>
+          <li>Settings</li>
+        </ul>
+      </div>
+      <div class="mock-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="margin: 0;">Claim CLM-20260304-A1B2</h2>
+          <span style="background: rgba(17,153,142,0.2); color: #38ef7d; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Submitted</span>
+        </div>
+        <div class="verdict-grid">
+          <div class="v-card">
+            <h4>Patient Information <span class="badge high">High Confidence</span></h4>
+            <table>
+              <tr><td>Name</td><td>Rajesh Kumar</td></tr>
+              <tr><td>Age / Gender</td><td>58 / Male</td></tr>
+              <tr><td>Policy Number</td><td>HSP-2025-TN-001</td></tr>
+              <tr><td>Admission</td><td>15-Feb-2026</td></tr>
+              <tr><td>Discharge</td><td>17-Feb-2026</td></tr>
+            </table>
+          </div>
+          <div class="v-card">
+            <h4>Medical Details <span class="badge high">High Confidence</span></h4>
+            <table>
+              <tr><td>Diagnosis</td><td>Senile Cataract, Right Eye</td></tr>
+              <tr><td>Procedure</td><td>Phacoemulsification + IOL</td></tr>
+              <tr><td>Hospital</td><td>Apollo Hospitals, Chennai</td></tr>
+              <tr><td>Doctor</td><td>Dr. S. Venkatesh</td></tr>
+              <tr><td>Total Bill</td><td style="color: #f2994a; font-weight: 700;">&#8377;1,50,000</td></tr>
+            </table>
+          </div>
+          <div class="v-verdict">
+            <h4>AI Coverage Verdict</h4>
+            <p>
+              <strong style="color: #38ef7d;">Estimated Coverage: ~85% of billed amount</strong><br><br>
+              Cataract surgery (Phacoemulsification with IOL implantation) is <strong>covered</strong> under your policy after the 2-year waiting period, which you have completed (policy start: Jan 2024).<br><br>
+              <strong>Deductions:</strong> Room rent capped at &#8377;1,000/day (2 days = &#8377;2,000 vs &#8377;4,000 billed &mdash; &#8377;2,000 deducted). Co-pay of 5% applies to remaining amount.<br><br>
+              <strong>Estimated payable:</strong> &#8377;1,27,500 &nbsp; | &nbsp; <strong>Patient responsibility:</strong> &#8377;22,500
+            </p>
+          </div>
+          <div class="v-blockchain">
+            <h4>&#128279; Blockchain Proof</h4>
+            <p style="font-size: 12px; margin-bottom: 6px;">Merkle Root:</p>
+            <p class="hash">0x7a3f8b2c1d4e5f6a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6</p>
+            <p style="font-size: 12px; margin-top: 8px;">Tx Hash: <span class="hash" style="color: #38ef7d;">0xabc123...def789</span> &middot; <span style="color: #667eea; font-size: 11px;">View on Etherscan &rarr;</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FIGURE 6: Insurer Portal — Claim Review ==================== -->
+<div class="page">
+  <p class="page-title">Figure 6</p>
+  <h2>Insurer Portal — Claim Review</h2>
+  <div class="mockup">
+    <div class="mock-topbar">
+      <div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div>
+      <div class="mock-url">localhost:5173/insurer/claims/CLM-20260304-A1B2</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-sidebar">
+        <h3 style="color: #f2994a;">&#9878; ClaimChain <span style="font-size: 10px; opacity: 0.7;">INSURER</span></h3>
+        <ul>
+          <li>Dashboard</li>
+          <li class="active">Review Claims</li>
+          <li>Approved</li>
+          <li>Rejected</li>
+        </ul>
+      </div>
+      <div class="mock-content">
+        <div class="insurer-header">
+          <h2 style="margin: 0;">Claim CLM-20260304-A1B2</h2>
+          <span class="status">Under Review</span>
+        </div>
+
+        <div class="fraud-bar">
+          <div class="label">Fraud Risk Score</div>
+          <div class="bar-track"><div class="bar-fill low"></div></div>
+          <div class="score">LOW (22/100)</div>
+        </div>
+
+        <div class="verdict-grid" style="margin-bottom: 16px;">
+          <div class="v-card">
+            <h4>Claim Summary</h4>
+            <table>
+              <tr><td>Patient</td><td>Rajesh Kumar, 58M</td></tr>
+              <tr><td>Policy</td><td>HSP-2025-TN-001</td></tr>
+              <tr><td>Diagnosis</td><td>Senile Cataract</td></tr>
+              <tr><td>Procedure</td><td>Phacoemulsification + IOL</td></tr>
+              <tr><td>Total Bill</td><td style="font-weight: 700;">&#8377;1,50,000</td></tr>
+              <tr><td>AI Payable Est.</td><td style="color: #38ef7d; font-weight: 700;">&#8377;1,27,500 (85%)</td></tr>
+            </table>
+          </div>
+          <div class="v-card">
+            <h4>Confidence &amp; Flags</h4>
+            <table>
+              <tr><td>OCR Confidence</td><td><span class="badge high">92%</span></td></tr>
+              <tr><td>Waiting Period</td><td><span class="badge high">Met</span></td></tr>
+              <tr><td>Room Rent</td><td><span class="badge med">Exceeded</span> &#8377;2K over</td></tr>
+              <tr><td>Documents</td><td><span class="badge high">Complete</span></td></tr>
+              <tr><td>Anomalies</td><td><span class="badge high">None</span></td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="timeline">
+          <h4 style="font-size: 13px; color: #64ffda; margin-bottom: 12px;">On-Chain Timeline</h4>
+          <div class="timeline-item">
+            <div class="timeline-dot-col"><div class="timeline-dot" style="background: #11998e;"></div><div class="timeline-line"></div></div>
+            <div class="timeline-content"><div class="event">Claim Submitted &mdash; Merkle root recorded</div><div class="time">2026-03-04 10:23:15 &middot; Tx: 0xabc...789</div></div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot-col"><div class="timeline-dot" style="background: #f2994a;"></div><div class="timeline-line" style="background: transparent;"></div></div>
+            <div class="timeline-content"><div class="event">Status: Under Review</div><div class="time">2026-03-04 10:25:02 &middot; Tx: 0xdef...456</div></div>
+          </div>
+        </div>
+
+        <div class="insurer-actions">
+          <button class="mock-btn green" style="padding: 12px 32px;">&#10003; Approve Claim</button>
+          <button class="mock-btn red" style="padding: 12px 32px;">&#10007; Reject Claim</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -10,10 +10,9 @@ import re
 from typing import Optional
 
 import spacy
-from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from config import LLM_MODEL, LLM_TEMPERATURE, SPACY_MODEL
+from config import LLM_MODEL, LLM_TEMPERATURE, SPACY_MODEL, USE_GEMINI, GEMINI_API_KEY, GEMINI_MODEL
 from models import (
     ExtractedClaim,
     PatientInfo,
@@ -131,8 +130,57 @@ Rules:
 - Be precise: only extract what is explicitly stated in the text"""
 
 
+def _get_gemini_llm():
+    """Get Gemini LLM instance."""
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    return ChatGoogleGenerativeAI(
+        model=GEMINI_MODEL,
+        google_api_key=GEMINI_API_KEY,
+        temperature=LLM_TEMPERATURE,
+    )
+
+
+def _get_ollama_llm():
+    """Get Ollama LLM instance."""
+    from langchain_ollama import ChatOllama
+    return ChatOllama(
+        model=LLM_MODEL,
+        temperature=LLM_TEMPERATURE,
+        format="json",
+    )
+
+
+def _get_extraction_llm():
+    """Get the LLM for structured extraction — Gemini or Ollama based on config."""
+    if USE_GEMINI and GEMINI_API_KEY:
+        return _get_gemini_llm(), True  # (llm, is_gemini)
+    else:
+        return _get_ollama_llm(), False
+
+
+def _parse_llm_json(content: str) -> dict:
+    """Parse JSON from LLM response, handling markdown wrapping."""
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        # Fallback: try to find JSON in the response (common with Gemini wrapping in ```json)
+        cleaned = re.sub(r"```json\s*", "", content)
+        cleaned = re.sub(r"```\s*$", "", cleaned)
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                try:
+                    return json.loads(json_match.group())
+                except json.JSONDecodeError:
+                    return {}
+            return {}
+
+
 def extract_fields_llm(raw_text: str, spacy_entities: dict) -> dict:
-    """Use Ollama mistral to extract structured fields from OCR text.
+    """Use LLM (Gemini or Ollama) to extract structured fields from OCR text.
+    If Gemini fails (rate limit, quota, etc.), automatically falls back to Ollama.
 
     Args:
         raw_text: The raw OCR text from the document.
@@ -141,11 +189,7 @@ def extract_fields_llm(raw_text: str, spacy_entities: dict) -> dict:
     Returns:
         Dict with extracted fields matching the JSON schema.
     """
-    llm = ChatOllama(
-        model=LLM_MODEL,
-        temperature=LLM_TEMPERATURE,
-        format="json",
-    )
+    llm, is_gemini = _get_extraction_llm()
 
     human_content = f"""Extract structured fields from this hospital document text.
 
@@ -160,22 +204,30 @@ spaCy pre-extracted entities (use as hints):
 {raw_text[:8000]}
 --- DOCUMENT TEXT END ---"""
 
-    response = llm.invoke([
-        SystemMessage(content=EXTRACTION_SYSTEM_PROMPT),
-        HumanMessage(content=human_content),
-    ])
+    # For Gemini, append "respond ONLY with JSON" to reinforce structured output
+    prompt_suffix = "\n\nIMPORTANT: Respond with ONLY the JSON object, no markdown, no explanation." if is_gemini else ""
 
+    messages = [
+        SystemMessage(content=EXTRACTION_SYSTEM_PROMPT + prompt_suffix),
+        HumanMessage(content=human_content),
+    ]
+
+    # Try primary LLM, fall back to Ollama if Gemini fails
     try:
-        return json.loads(response.content)
-    except json.JSONDecodeError:
-        # Fallback: try to find JSON in the response
-        json_match = re.search(r"\{.*\}", response.content, re.DOTALL)
-        if json_match:
+        response = llm.invoke(messages)
+        return _parse_llm_json(response.content)
+    except Exception as e:
+        if is_gemini:
+            print(f"[NLP] Gemini failed ({e}), falling back to Ollama...")
             try:
-                return json.loads(json_match.group())
-            except json.JSONDecodeError:
+                fallback_llm = _get_ollama_llm()
+                response = fallback_llm.invoke(messages)
+                return _parse_llm_json(response.content)
+            except Exception as e2:
+                print(f"[NLP] Ollama fallback also failed: {e2}")
                 return {}
-        return {}
+        else:
+            raise
 
 
 # --- Build Pydantic Model from Extractions ---
@@ -303,7 +355,7 @@ def _compute_missing_fields(
         missing.append("procedures")
     if not treatment.admission_type:
         missing.append("admission_type")
-    if not billing.total_amount:
+    if billing.total_amount is None:
         missing.append("total_amount")
     if not dates.admission_date:
         missing.append("admission_date")

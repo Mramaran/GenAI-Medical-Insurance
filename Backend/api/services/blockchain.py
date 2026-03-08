@@ -227,7 +227,8 @@ def get_claim_events(claim_id: str) -> list[dict]:
     Returns:
         List of event dicts with event_type, tx_hash, block_number, timestamp, data.
     """
-    if not _is_configured():
+    # Reading events only requires CONTRACT_ADDRESS (no private key needed)
+    if not CONTRACT_ADDRESS:
         return []
 
     try:

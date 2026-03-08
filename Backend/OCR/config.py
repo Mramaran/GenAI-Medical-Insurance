@@ -30,3 +30,8 @@ SPACY_MODEL = "en_core_web_sm"
 LLM_MODEL = "mistral"
 OLLAMA_BASE_URL = "http://localhost:11434"
 LLM_TEMPERATURE = 0
+
+# --- Gemini (demo mode — faster than local Ollama) ---
+USE_GEMINI = os.getenv("USE_GEMINI", "false").lower() == "true"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = "gemini-2.0-flash"

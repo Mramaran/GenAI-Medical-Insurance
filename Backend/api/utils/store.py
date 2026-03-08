@@ -43,6 +43,16 @@ def get_all_claims() -> list[dict]:
     )
 
 
+def find_claim_by_doc_hash(doc_hashes: list[str]) -> dict | None:
+    """Find an existing claim that shares any document hash. Returns the matching claim or None."""
+    incoming = set(doc_hashes)
+    for record in _claims.values():
+        existing_hashes = set(record.get("document_hashes", []))
+        if incoming & existing_hashes:
+            return record
+    return None
+
+
 def update_claim(claim_id: str, updates: dict) -> dict | None:
     """Merge updates into an existing claim record. Returns updated record or None."""
     record = _claims.get(claim_id)

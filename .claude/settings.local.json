@@ -12,7 +12,32 @@
       "Bash(python -c \":*)",
       "Bash(pip install web3 --quiet)",
       "Bash(tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE)",
-      "Bash(findstr uvicorn)"
+      "Bash(findstr uvicorn)",
+      "Bash(pip install langchain-google-genai --quiet)",
+      "Bash(pip install langchain-ollama --quiet)",
+      "Bash(pip install langchain-google-genai)",
+      "Bash(python -c \"import langchain_google_genai; print\\(''OK:'', langchain_google_genai.__version__\\)\")",
+      "Bash(python -c \"import langchain_google_genai; print\\(''import OK''\\)\")",
+      "Bash(\"C:\\\\Users\\\\mrmar\\\\OneDrive\\\\Documents\\\\TN IMPACT\\\\GenAI Insurance V1\\\\Backend\\\\OCR\\\\venv\\\\Scripts\\\\python.exe\" -c \":*)",
+      "Bash(\"C:\\\\Users\\\\mrmar\\\\OneDrive\\\\Documents\\\\TN IMPACT\\\\GenAI Insurance V1\\\\Backend\\\\OCR\\\\venv\\\\Scripts\\\\pip.exe\" install langchain-google-genai --quiet)",
+      "Bash(\"C:\\\\Users\\\\mrmar\\\\OneDrive\\\\Documents\\\\TN IMPACT\\\\GenAI Insurance V1\\\\Backend\\\\OCR\\\\venv\\\\Scripts\\\\python.exe\" -c \"from langchain_google_genai import ChatGoogleGenerativeAI; print\\(''OCR venv: langchain-google-genai OK''\\)\")",
+      "Bash(\"C:\\\\Users\\\\mrmar\\\\OneDrive\\\\Documents\\\\TN IMPACT\\\\GenAI Insurance V1\\\\Backend\\\\OCR\\\\venv\\\\Scripts\\\\python.exe\" -m pip install langchain-google-genai)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(curl -s -w \"\\\\nHTTP_CODE: %{http_code}\" -X POST http://localhost:8000/api/claims/analyze -F \"files=@C:\\\\Users\\\\mrmar\\\\OneDrive\\\\Documents\\\\TN IMPACT\\\\GenAI Insurance V1\\\\Backend\\\\OCR\\\\test_docs\\\\DISCHARGE_SUMMARY.pdf\" -F \"policy_number=HSP-2025-TN-001\")",
+      "Bash(where uvicorn)",
+      "Bash(python -c \"import uvicorn; print\\(uvicorn.__file__\\)\")",
+      "Bash(python -c \"import langchain_google_genai; print\\(langchain_google_genai.__file__\\)\")",
+      "Bash(pip show langchain-google-genai)",
+      "Bash(findstr Location)",
+      "Bash(C:Python313python.exe -m pip install langchain-google-genai)",
+      "Bash(tasklist)",
+      "Bash(\"C:\\\\Users\\\\mrmar\\\\OneDrive\\\\Documents\\\\TN IMPACT\\\\GenAI Insurance V1\\\\Backend\\\\OCR\\\\venv\\\\Scripts\\\\python.exe\" -c \"from langchain_google_genai import ChatGoogleGenerativeAI; print\\(''OK''\\)\")",
+      "Bash(curl -s -w \"\\\\nHTTP_CODE: %{http_code}\" http://localhost:8000/)",
+      "Bash(\"C:\\\\Users\\\\mrmar\\\\OneDrive\\\\Documents\\\\TN IMPACT\\\\GenAI Insurance V1\\\\Backend\\\\OCR\\\\venv\\\\Scripts\\\\python.exe\" -c \"import uvicorn; print\\(''uvicorn OK''\\)\")",
+      "Bash(\"C:\\\\Users\\\\mrmar\\\\OneDrive\\\\Documents\\\\TN IMPACT\\\\GenAI Insurance V1\\\\Backend\\\\OCR\\\\venv\\\\Scripts\\\\python.exe\" -m pip install fastapi \"uvicorn[standard]\" python-multipart python-dotenv web3)",
+      "Bash(npm install qrcode.react)",
+      "Bash(python -c \"from services.fraud_scorer import score_claim; print\\(''Fraud scorer imported OK''\\); result = score_claim\\({''billing'': {''total_amount'': 600000}, ''dates'': {}, ''diagnosis'': {}, ''treatment'': {}, ''missing_fields'': []}\\); print\\(f''Test result: {result}''\\)\")",
+      "Bash(python -c \"from routes.claims import router as cr; from routes.chat import router as ch; print\\(''All routers imported OK''\\)\")"
     ]
   }
 }

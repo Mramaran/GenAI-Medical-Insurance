@@ -3,7 +3,8 @@ import Sidebar from "./components/Sidebar.jsx";
 import UploadPage from "./pages/UploadPage.jsx";
 import VerdictPage from "./pages/VerdictPage.jsx";
 import ClaimsPage from "./pages/ClaimsPage.jsx";
-import AdjudicatorPage from "./pages/AdjudicatorPage.jsx";
+import VerifyPage from "./pages/VerifyPage.jsx";
+import ChatWidget from "./components/ChatWidget.jsx";
 
 export default function App() {
   return (
@@ -33,9 +34,11 @@ export default function App() {
           <Route path="/" element={<UploadPage />} />
           <Route path="/verdict/:claimId" element={<VerdictPage />} />
           <Route path="/claims" element={<ClaimsPage />} />
-          <Route path="/insurer" element={<AdjudicatorPage />} />
+          <Route path="/verify" element={<VerifyPage />} />
         </Routes>
       </main>
+
+      <ChatWidget />
     </BrowserRouter>
   );
 }

@@ -12,7 +12,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from rag_config import LLM_MODEL
+from rag_config import LLM_MODEL, USE_GEMINI, GEMINI_API_KEY, GEMINI_MODEL
 from retriever import retrieve_policy_info
 
 # --- System Prompt ---
@@ -32,7 +32,14 @@ Do NOT make up information. Only use facts from the retrieved policy documents."
 
 # --- LLM Setup ---
 def get_llm():
-    """Get ChatOllama LLM instance (mistral with tool calling support)."""
+    """Get LLM instance — uses Gemini when configured, otherwise Ollama."""
+    if USE_GEMINI and GEMINI_API_KEY:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=GEMINI_MODEL,
+            google_api_key=GEMINI_API_KEY,
+            temperature=0,
+        )
     return ChatOllama(
         model=LLM_MODEL,
         temperature=0,

@@ -19,5 +19,8 @@ langchain-text-splitters
 langgraph
 chromadb
 
+# Gemini (demo mode — faster than local Ollama)
+langchain-google-genai
+
 # Common
 pydantic

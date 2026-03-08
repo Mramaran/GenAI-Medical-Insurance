@@ -30,17 +30,53 @@ export default function UploadPage() {
     setFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const STEPS = [
+    { key: "upload", label: "Uploading documents..." },
+    { key: "ocr", label: "Reading documents (OCR + NLP)..." },
+    { key: "rag", label: "Checking policy coverage (RAG)..." },
+    { key: "hash", label: "Computing cryptographic hashes..." },
+    { key: "blockchain", label: "Recording proof on blockchain..." },
+    { key: "done", label: "Done! Redirecting..." },
+  ];
+  const [stepIdx, setStepIdx] = useState(0);
+
+  const policyValid = /^HSP-\d{4}-[A-Z]{2}-\d{3}$/.test(policyNumber.trim());
+
   const handleSubmit = async () => {
     if (!files.length) return;
+    if (!policyValid) {
+      setError("Invalid policy number format. Expected: HSP-YYYY-XX-NNN (e.g. HSP-2025-TN-001)");
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
+    setStepIdx(0);
+
+    // Declare outside try so it's accessible in catch
+    let stepTimer = null;
 
     try {
-      setStep("Reading documents (OCR)...");
+      // Simulate progress steps (actual API call is a single request)
+      setStep(STEPS[0].label);
+      setStepIdx(0);
+
+      // Start a progress simulation in background
+      stepTimer = setInterval(() => {
+        setStepIdx((prev) => {
+          if (prev < 4) {
+            const next = prev + 1;
+            setStep(STEPS[next].label);
+            return next;
+          }
+          return prev;
+        });
+      }, 3000);
 
       const data = await analyzeClaim(files, policyNumber);
-      setStep("Done!");
+      clearInterval(stepTimer);
+      setStepIdx(5);
+      setStep(STEPS[5].label);
       setResult(data);
 
       // Navigate to verdict page after a brief pause
@@ -48,8 +84,10 @@ export default function UploadPage() {
         setTimeout(() => navigate(`/verdict/${data.claim_id}`), 1500);
       }
     } catch (err) {
+      if (stepTimer) clearInterval(stepTimer);
       setError(err.message);
       setStep("");
+      setStepIdx(0);
     } finally {
       setLoading(false);
     }
@@ -96,7 +134,7 @@ export default function UploadPage() {
             style={{
               width: "100%",
               padding: "12px 16px",
-              border: "1px solid #1e3a5f",
+              border: `1px solid ${policyNumber && !policyValid ? "#DC2626" : "#1e3a5f"}`,
               borderRadius: 10,
               background: "#0F172A",
               color: "#F1F5F9",
@@ -104,6 +142,11 @@ export default function UploadPage() {
               outline: "none",
             }}
           />
+          {policyNumber && !policyValid && (
+            <div style={{ color: "#F87171", fontSize: 12, marginTop: 4 }}>
+              Format: HSP-YYYY-XX-NNN (e.g. HSP-2025-TN-001)
+            </div>
+          )}
         </div>
 
         {/* Drop zone */}
@@ -182,7 +225,7 @@ export default function UploadPage() {
         {/* Submit */}
         <button
           onClick={handleSubmit}
-          disabled={!files.length || loading}
+          disabled={!files.length || loading || !policyValid}
           style={{
             width: "100%",
             marginTop: 24,
@@ -190,13 +233,13 @@ export default function UploadPage() {
             border: "none",
             borderRadius: 10,
             background:
-              !files.length || loading
+              !files.length || loading || !policyValid
                 ? "#1e3a5f"
                 : "linear-gradient(135deg, #0EA5E9 0%, #6366F1 100%)",
             color: "#fff",
             fontSize: 16,
             fontWeight: 600,
-            cursor: !files.length || loading ? "not-allowed" : "pointer",
+            cursor: !files.length || loading || !policyValid ? "not-allowed" : "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -213,6 +256,61 @@ export default function UploadPage() {
           )}
         </button>
       </Card>
+
+      {/* ── Step Progress ────────────────────────────────────────── */}
+      {loading && (
+        <Card style={{ marginTop: 24, maxWidth: 640 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#38BDF8", marginBottom: 16 }}>
+            Processing Pipeline
+          </div>
+          {STEPS.map((s, i) => (
+            <div
+              key={s.key}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "8px 0",
+                opacity: i <= stepIdx ? 1 : 0.3,
+                transition: "opacity 0.3s",
+              }}
+            >
+              <div
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  background:
+                    i < stepIdx
+                      ? "#059669"
+                      : i === stepIdx
+                      ? "linear-gradient(135deg, #0EA5E9, #6366F1)"
+                      : "#1e3a5f",
+                  color: "#fff",
+                  flexShrink: 0,
+                }}
+              >
+                {i < stepIdx ? "\u2713" : i + 1}
+              </div>
+              <span
+                style={{
+                  fontSize: 13,
+                  color: i <= stepIdx ? "#E2E8F0" : "#64748B",
+                  fontWeight: i === stepIdx ? 600 : 400,
+                }}
+              >
+                {s.label}
+              </span>
+              {i === stepIdx && i < 5 && <Spinner size={14} />}
+            </div>
+          ))}
+        </Card>
+      )}
 
       {/* ── Error ──────────────────────────────────────────────── */}
       {error && (

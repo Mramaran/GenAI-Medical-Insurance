@@ -62,6 +62,23 @@ export async function reviewClaim(claimId, action, reason = "") {
 }
 
 /**
+ * POST /api/chat
+ * Ask a policy question via RAG chatbot.
+ */
+export async function chatQuestion(question) {
+  const res = await fetch(`${BASE}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Chat failed" }));
+    throw new Error(err.detail || "Chat request failed");
+  }
+  return res.json();
+}
+
+/**
  * GET /  — health check
  */
 export function healthCheck() {

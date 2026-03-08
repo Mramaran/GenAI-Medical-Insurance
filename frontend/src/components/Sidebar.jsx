@@ -7,7 +7,7 @@ export default function Sidebar() {
   const items = [
     { path: "/", label: "Submit Claim", icon: "\u{1F4E4}" },
     { path: "/claims", label: "My Claims", icon: "\u{1F4CB}" },
-    { path: "/insurer", label: "Insurer Portal", icon: "\u2696\uFE0F" },
+    { path: "/verify", label: "Verify Claim", icon: "\u{1F50D}" },
   ];
 
   const isActive = (path) => {
@@ -55,7 +55,7 @@ export default function Sidebar() {
           paddingLeft: 38,
         }}
       >
-        AI + Blockchain
+        Patient Portal
       </div>
 
       <nav style={{ flex: 1 }}>

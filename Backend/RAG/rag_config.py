@@ -20,3 +20,8 @@ CHUNK_OVERLAP = 200
 LLM_MODEL = "mistral"
 EMBEDDING_MODEL = "nomic-embed-text"
 OLLAMA_BASE_URL = "http://localhost:11434"
+
+# --- Gemini (demo mode — faster than local Ollama) ---
+USE_GEMINI = os.getenv("USE_GEMINI", "false").lower() == "true"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = "gemini-2.0-flash"
